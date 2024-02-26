@@ -1,0 +1,132 @@
+[gd_scene load_steps=11 format=3 uid="uid://btydjehrxeefb"]
+
+[ext_resource type="Script" path="res://Scenes/Models/Player/sword.gd" id="1_8enef"]
+[ext_resource type="Script" path="res://Scripts/hitbox.gd" id="2_db38c"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_osd4a"]
+size = Vector3(2, 1.97461, 1.94434)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_58d37"]
+albedo_color = Color(0.839216, 0.839216, 0.839216, 1)
+metallic = 0.77
+metallic_specular = 1.0
+roughness = 0.1
+
+[sub_resource type="BoxMesh" id="BoxMesh_2lox0"]
+material = SubResource("StandardMaterial3D_58d37")
+size = Vector3(0.1, 1, 0.025)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_67ifn"]
+albedo_color = Color(0.486275, 0.231373, 0.133333, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_87vg0"]
+material = SubResource("StandardMaterial3D_67ifn")
+size = Vector3(0.3, 0.05, 0.03)
+
+[sub_resource type="Animation" id="Animation_gsyu4"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sword:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Hitbox/CollisionShape3D:disabled")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+
+[sub_resource type="Animation" id="Animation_3ju0e"]
+resource_name = "slash"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sword:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(0, 0, -1.5708), Vector3(0, 0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Hitbox/CollisionShape3D:disabled")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.2),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [false, true]
+}
+tracks/2/type = "method"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath(".")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0.3),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"_on_look_at_mouse_disabled"
+}]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_g5p6a"]
+_data = {
+"RESET": SubResource("Animation_gsyu4"),
+"slash": SubResource("Animation_3ju0e")
+}
+
+[node name="SwordOwner" type="Node3D"]
+script = ExtResource("1_8enef")
+
+[node name="Hitbox" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.00364133, 0)
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("2_db38c")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hitbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.233887, 0.138061, -0.13208)
+shape = SubResource("BoxShape3D_osd4a")
+disabled = true
+
+[node name="Sword" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.000437275, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Sword"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.503204, 0)
+mesh = SubResource("BoxMesh_2lox0")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="Sword"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.253204, 0)
+mesh = SubResource("BoxMesh_87vg0")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_g5p6a")
+}
+
+[connection signal="area_entered" from="Hitbox" to="." method="_on_hitbox_area_entered"]
+[connection signal="body_entered" from="Hitbox" to="." method="_on_hitbox_body_entered"]

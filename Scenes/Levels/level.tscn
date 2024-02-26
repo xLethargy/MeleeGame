@@ -1,0 +1,74 @@
+[gd_scene load_steps=11 format=3 uid="uid://5iix84orlxgc"]
+
+[ext_resource type="Script" path="res://Scenes/Levels/level.gd" id="1_oga0r"]
+[ext_resource type="PackedScene" uid="uid://cjdbkaidva1a" path="res://Scenes/Models/Player/Frog.tscn" id="2_12clx"]
+[ext_resource type="PackedScene" uid="uid://crbnt2aih32eq" path="res://Scenes/Models/Enemies/milk.tscn" id="2_kkakq"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_umrep"]
+sky_top_color = Color(0.137255, 0.278431, 0.513726, 1)
+sky_horizon_color = Color(0.25098, 0.27451, 0.454902, 1)
+ground_bottom_color = Color(0.25098, 0.27451, 0.454902, 1)
+ground_horizon_color = Color(0.25098, 0.27451, 0.454902, 1)
+
+[sub_resource type="Sky" id="Sky_cqu6o"]
+sky_material = SubResource("ProceduralSkyMaterial_umrep")
+
+[sub_resource type="Environment" id="Environment_xvuee"]
+background_mode = 2
+sky = SubResource("Sky_cqu6o")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ltp4r"]
+size = Vector3(100, 1, 100)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_v7cq5"]
+albedo_color = Color(0.176471, 0.329412, 0.141176, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wm4t4"]
+material = SubResource("StandardMaterial3D_v7cq5")
+size = Vector3(500, 1, 150)
+
+[sub_resource type="BoxMesh" id="BoxMesh_grbrp"]
+material = SubResource("StandardMaterial3D_v7cq5")
+size = Vector3(500, 1, 150)
+
+[node name="Level" type="Node3D"]
+script = ExtResource("1_oga0r")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_xvuee")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866025, -0.3847, -0.319384, 0, -0.638768, 0.769399, -0.5, 0.666319, 0.553189, 0, 0, 0)
+shadow_enabled = true
+
+[node name="Milk" parent="." instance=ExtResource("2_kkakq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.817791, 0, 0)
+
+[node name="Frog" parent="." instance=ExtResource("2_12clx")]
+unique_name_in_owner = true
+
+[node name="Ground" type="StaticBody3D" parent="."]
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("BoxShape3D_ltp4r")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+mesh = SubResource("BoxMesh_wm4t4")
+skeleton = NodePath("../..")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="Ground"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, -0.5, -6.19808)
+mesh = SubResource("BoxMesh_grbrp")
+skeleton = NodePath("../..")
+
+[node name="MainCamera" type="Camera3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 0.939693, 0.34202, 0, -0.34202, 0.939693, 1.31544, 3.85578, 5.37778)
+
+[node name="Milk2" parent="." instance=ExtResource("2_kkakq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.40242, 0, -0.0298901)
