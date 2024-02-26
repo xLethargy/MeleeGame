@@ -66,6 +66,7 @@ func take_damage(amount : int):
 
 func die():
 	await animation_player.animation_finished
+	$Meshes/Hurtbox/CollisionShape3D.disabled = true
 	animation_player.play("die")
 	await animation_player.animation_finished
 	queue_free()
