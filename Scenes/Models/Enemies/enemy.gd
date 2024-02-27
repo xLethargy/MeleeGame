@@ -42,7 +42,7 @@ func take_damage(amount : int):
 		hit_timer.stop()
 		hit_timer.start()
 		hits_taken += 1
-		if hits_taken == 3:
+		if hits_taken == 3 and current_health > 0:
 			immune = true
 			immunity_timer.start()
 			hits_taken = 0

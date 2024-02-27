@@ -4,6 +4,8 @@ extends CharacterBody3D
 
 @export var normal_speed = 5.0
 @export var sprint_speed = 10.0
+@export var slow_speed = 2.5
+var slowed = false
 var current_speed = normal_speed
 
 @export var jump_impulse = 5
@@ -16,19 +18,25 @@ var enemy_position = null
 var enemy_look_at = false
 var no_movement = false
 
-var current_rotation_y
+var look_at_to = Vector3.ZERO
+var is_in_air = false
+
+func _ready():
+	look_at(Vector3(1, 0, 0), Vector3.UP)
+	Global.player = self
 
 func _process(delta):
 	var direction = Vector3.ZERO
+	print (slowed)
 	
-	if Input.is_action_pressed("sprint") and !Input.is_action_pressed("jump") and is_on_floor():
+	if Input.is_action_pressed("sprint") and !Input.is_action_pressed("jump") and !slowed:
 		current_speed = sprint_speed
-	elif is_on_floor():
+	elif is_on_floor() and !slowed:
 		current_speed = normal_speed
 	
 	if Input.is_action_pressed("move_right"):
 		direction.x += 1
-	if Input.is_action_pressed("move_left"):
+	elif Input.is_action_pressed("move_left"):
 		direction.x -= 1
 		
 	if Input.is_action_pressed("move_forward"):
@@ -44,25 +52,31 @@ func _process(delta):
 	
 	if is_on_floor() and Input.is_action_pressed("jump"):
 		velocity.y = jump_impulse
+		$TimeUntilInAir.stop()
+		$TimeUntilInAir.start()
 	
 	velocity.y -= fall_accelaration * delta
 	
-	if look_at_mouse == false:
-		current_rotation_y = global_rotation.y
-	
-	if Input.is_action_just_pressed("attack"):
-		look_at(level_node.screen_point_to_ray(), Vector3.UP)
+	if Input.is_action_just_pressed("attack") and is_on_floor():
 		no_movement = true
 		$NoMovementTimer.stop()
 		$NoMovementTimer.start()
-	elif direction != Vector3.ZERO and !no_movement:
-		#smooth rotation
-		self.rotation.y = lerp_angle(self.rotation.y, atan2( -direction.x , -direction.z), delta * rotation_speed)
-		
-		#hard rotation
-		#look_at(position + direction, Vector3.UP)
 	
-	if !no_movement or !is_on_floor() or current_speed == sprint_speed:
+	elif direction != Vector3.ZERO and !no_movement:
+		look_at_to = Vector3(position.x, 0, position.z) + Vector3(direction.x, 0, 0)
+		var direction_vector = (look_at_to - position).normalized()
+		
+		if abs(direction_vector.dot(Vector3.UP)) < 1 and look_at_to != position:
+			look_at(look_at_to, Vector3.UP)
+	
+	if is_on_floor() and is_in_air == true:
+		print ("first")
+		is_in_air = false
+		slowed = true
+		current_speed = slow_speed
+		$SlowTimer.stop()
+		$SlowTimer.start()
+	elif !no_movement or !is_on_floor() or current_speed == sprint_speed:
 		move_and_slide()
 	
 	global_rotation.x = 0
@@ -70,3 +84,12 @@ func _process(delta):
 
 func _on_no_movement_timer_timeout():
 	no_movement = false
+
+
+func _on_time_until_in_air_timeout():
+	is_in_air = true
+
+
+func _on_slow_timer_timeout():
+	slowed = false
+	current_speed = normal_speed

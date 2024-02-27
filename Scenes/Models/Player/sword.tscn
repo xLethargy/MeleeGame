@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://Scripts/hitbox.gd" id="2_db38c"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_osd4a"]
-size = Vector3(1.31396, 1.09045, 2)
+size = Vector3(1.31396, 1.09045, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_58d37"]
 albedo_color = Color(0.839216, 0.839216, 0.839216, 1)
@@ -108,7 +108,7 @@ collision_mask = 0
 script = ExtResource("2_db38c")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Hitbox"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.461182, 0.487, -0.208862)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.5, -0.262573)
 shape = SubResource("BoxShape3D_osd4a")
 disabled = true
 
