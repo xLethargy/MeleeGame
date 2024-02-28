@@ -23,6 +23,8 @@ var last_directions : Array = [direction]
 var collider = null
 @onready var original_laser_scale_z = $Frog/RayCast3D/Pivot/Tongue.mesh.size.z
 
+@onready var audio_player = $AudioStreamPlayer3D
+
 func _ready():
 	Global.player = self
 
@@ -67,7 +69,12 @@ func _player_movement(delta):
 		velocity.y = jump_impulse
 		$TimeUntilInAir.stop()
 		$TimeUntilInAir.start()
-	
+		
+		var fart_random = randi_range(0, 100)
+		if fart_random == 100:
+			audio_player.pitch_scale = randf_range(0.5, 1.25)
+			audio_player.play()
+		
 	velocity.y -= fall_accelaration * delta
 	
 	if Input.is_action_just_pressed("attack") and is_on_floor():
