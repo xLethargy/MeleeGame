@@ -48,7 +48,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.817791, 0, 0)
 
 [node name="Frog" parent="." instance=ExtResource("2_12clx")]
 unique_name_in_owner = true
-normal_speed = 4
 
 [node name="Ground" type="StaticBody3D" parent="."]
 collision_mask = 0
@@ -70,6 +69,3 @@ skeleton = NodePath("../..")
 [node name="MainCamera" type="Camera3D" parent="."]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 0.939693, 0.34202, 0, -0.34202, 0.939693, 1.31544, 2.91519, 3.97067)
-
-[node name="Milk2" parent="." instance=ExtResource("2_kkakq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.40242, 0, -0.0298901)

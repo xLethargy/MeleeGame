@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://crbnt2aih32eq"]
+[gd_scene load_steps=27 format=3 uid="uid://crbnt2aih32eq"]
 
 [ext_resource type="Script" path="res://Scenes/Models/Enemies/enemy.gd" id="1_8ccf3"]
 [ext_resource type="Script" path="res://Scripts/hurtbox.gd" id="1_a08o6"]
@@ -252,6 +252,10 @@ _surfaces = [{
 radius = 1.18872
 height = 6.09415
 
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_m5x4i"]
+radius = 0.248219
+height = 1.25696
+
 [sub_resource type="Animation" id="Animation_dyl5p"]
 length = 0.001
 tracks/0/type = "value"
@@ -378,7 +382,8 @@ _data = {
 "hit": SubResource("Animation_xaekk")
 }
 
-[node name="Milk" type="Node3D"]
+[node name="Milk" type="CharacterBody3D"]
+collision_layer = 8
 script = ExtResource("1_8ccf3")
 
 [node name="Meshes" type="Node3D" parent="."]
@@ -424,14 +429,18 @@ script = ExtResource("1_a08o6")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.191274, 0)
 shape = SubResource("CapsuleShape3D_cf13m")
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-libraries = {
-"": SubResource("AnimationLibrary_k3d3p")
-}
-
 [node name="Label3D" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.40724, 0)
 visible = false
 text = "0"
 font_size = 48
 outline_size = 6
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.624576, 0)
+shape = SubResource("CapsuleShape3D_m5x4i")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_k3d3p")
+}

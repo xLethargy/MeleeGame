@@ -20,12 +20,29 @@ var angular_accelaration = 7
 var direction = Vector3.ZERO
 var last_directions : Array = [direction]
 
+var collider = null
+@onready var original_laser_scale_z = $Frog/RayCast3D/Pivot/Tongue.mesh.size.z
+
 func _ready():
-	#look_at(Vector3(1, 0, 0), Vector3.UP)
 	Global.player = self
 
 func _process(delta):
 	
+	if Input.is_action_just_pressed("ability_one"):
+		if %RayCast3D.get_collider() != null:
+			
+			collider = %RayCast3D.get_collider()
+			var distance_math_sum = self.global_position.distance_to(collider.global_position)
+			print (distance_math_sum)
+			var adjusted_scale = distance_math_sum / original_laser_scale_z
+			
+			$Frog/RayCast3D/Pivot.scale.z = adjusted_scale
+			$Frog/RayCast3D/Pivot.visible = !$Frog/RayCast3D/Pivot.visible
+	
+	_player_movement(delta)
+
+
+func _player_movement(delta):
 	if Input.is_action_pressed("sprint") and is_on_floor() and !slowed:
 		current_speed = sprint_speed
 	elif is_on_floor() and !slowed:
@@ -39,7 +56,6 @@ func _process(delta):
 		else:
 			last_directions.pop_back()
 			last_directions.insert(0, direction)
-		
 	else:
 		current_speed = 0
 		
@@ -58,15 +74,6 @@ func _process(delta):
 		no_movement = true
 		$NoMovementTimer.stop()
 		$NoMovementTimer.start()
-	
-	#elif direction != Vector3.ZERO and !no_movement:
-		#look_at_to = Vector3(position.x, 0, position.z) + Vector3(direction.x, 0, 0)
-		#var direction_vector = (look_at_to - position).normalized()
-		
-		#if abs(direction_vector.dot(Vector3.UP)) < 1 and look_at_to != position:
-			#look_at(look_at_to, Vector3.UP)
-		
-		#look_at(position - -direction, Vector3.UP)
 	
 	if is_on_floor() and is_in_air == true:
 		is_in_air = false

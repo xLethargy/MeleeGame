@@ -6,7 +6,7 @@ extends Node3D
 var max_health = 100
 var current_health = max_health
 
-var normal_speed = 1.5
+var normal_speed = 0
 var sprint_speed = 6
 var current_speed = normal_speed
 
