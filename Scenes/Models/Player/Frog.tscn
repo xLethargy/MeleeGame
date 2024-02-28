@@ -184,13 +184,11 @@ height = 1.29827
 [node name="Frog" type="CharacterBody3D" groups=["Player"]]
 collision_layer = 4
 script = ExtResource("1_ch30h")
-normal_speed = 4.0
 sprint_speed = 6.0
 jump_impulse = 10
 fall_accelaration = 40.0
 
 [node name="Frog" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 
 [node name="Meshes" type="Node3D" parent="Frog"]
 transform = Transform3D(0.15, 0, 0, 0, 0.15, 0, 0, 0, 0.15, 0.00064218, 0.755829, -0.0516989)
