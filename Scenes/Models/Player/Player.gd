@@ -1,6 +1,8 @@
 extends CharacterBody3D
 
 @onready var level_node = get_tree().current_scene
+@onready var original_laser_scale_z = 5
+@onready var audio_player = $AudioStreamPlayer3D
 
 var normal_speed = 4
 var sprint_speed = 6
@@ -21,9 +23,7 @@ var direction = Vector3.ZERO
 var last_directions : Array = [direction]
 
 var collider = null
-@onready var original_laser_scale_z = 5
 
-@onready var audio_player = $AudioStreamPlayer3D
 
 var ability_one = false
 var distance_math_sum
@@ -122,7 +122,7 @@ func _ability_one(delta):
 		ability_one = false
 	else:
 		retract = false
-		
+	
 	
 	if ability_one == false and retract == false:
 		if Input.is_action_just_pressed("ability_one"):
@@ -130,14 +130,15 @@ func _ability_one(delta):
 				
 				collider = %RayCast3D.get_collider()
 				
-				if self.global_position.distance_to(collider.global_position) > 1:
-					ability_one = true
-					$Frog/Pivot.scale.z = 0
-					$Frog/Pivot.visible = true
-					no_movement = true
+				if collider.is_in_group("Enemy"):
+					if self.global_position.distance_to(collider.global_position) > 1 and collider.current_health > 0:
+						ability_one = true
+						$Frog/Pivot.scale.z = 0
+						$Frog/Pivot.visible = true
+						no_movement = true
+	
 	
 	if ability_one:
-		$Frog/Pivot/Hitbox/CollisionShape3D.disabled = false
 		distance_math_sum = self.global_position.distance_to(collider.global_position)
 		adjusted_scale = distance_math_sum / original_laser_scale_z
 		if $Frog/Pivot.scale.z < adjusted_scale - 0.05:
@@ -145,16 +146,10 @@ func _ability_one(delta):
 			
 			$Frog/Pivot.look_at(Vector3(collider.global_position.x, 1, collider.global_position.z), Vector3.UP)
 		else:
+			if collider.is_in_group("Enemy"):
+				collider.take_damage(30)
 			retract = true
 			no_movement = false
-	else:
-		$SwitchOffTongueCollisionTimer.stop()
-		$SwitchOffTongueCollisionTimer.start()
-		await $SwitchOffTongueCollisionTimer.timeout
-		$Frog/Pivot/Hitbox/CollisionShape3D.disabled = true
-		
-		
-
 
 
 func _on_vision_timer_timeout():
@@ -162,15 +157,16 @@ func _on_vision_timer_timeout():
 	var closest_enemy = null
 	var closest_distance = INF # Use GDScript's infinity constant as the initial closest distance
 	
-	print (overlaps)
 	if overlaps.size() > 0:
 		for overlap in overlaps:
 			if overlap.is_in_group("Enemy"):
 				var distance = self.global_position.distance_to(overlap.global_position)
 				
-				if closest_enemy == null or distance < closest_distance:
+				if (closest_enemy == null or distance < closest_distance) and overlap.current_health > 0:
 					closest_enemy = overlap
 					closest_distance = distance
+				else:
+					closest_enemy = null
 				
 				if closest_enemy != null:
 					%RayCast3D.look_at(Vector3(closest_enemy.global_position.x, 1, closest_enemy.global_position.z), Vector3.UP)
