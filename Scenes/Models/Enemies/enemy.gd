@@ -6,7 +6,7 @@ extends Node3D
 var max_health = 100
 var current_health = max_health
 
-var normal_speed = 0
+var normal_speed = 4
 var sprint_speed = 6
 var current_speed = normal_speed
 
@@ -73,13 +73,13 @@ func die():
 
 func _physics_process(delta):
 	if !animation_player.is_playing():
-		if !left and position.x >= 5:
+		if !left and position.z >= 5:
 			left = true
-		elif left and position.x <= -5:
+		elif left and position.z <= -5:
 			left = false
 
 		# Move based on the direction indicated by 'left'
 		if left:
-			position.x -= 1 * current_speed * delta # Move left
+			position.z -= 1 * current_speed * delta # Move left
 		else:
-			position.x += 1 * current_speed * delta # Move right
+			position.z += 1 * current_speed * delta # Move right

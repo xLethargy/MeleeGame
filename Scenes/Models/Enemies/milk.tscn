@@ -382,7 +382,7 @@ _data = {
 "hit": SubResource("Animation_xaekk")
 }
 
-[node name="Milk" type="CharacterBody3D"]
+[node name="Milk" type="CharacterBody3D" groups=["Enemy"]]
 collision_layer = 8
 script = ExtResource("1_8ccf3")
 

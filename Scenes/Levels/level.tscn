@@ -43,6 +43,9 @@ environment = SubResource("Environment_xvuee")
 transform = Transform3D(-0.866025, -0.3847, -0.319384, 0, -0.638768, 0.769399, -0.5, 0.666319, 0.553189, 0, 0, 0)
 shadow_enabled = true
 
+[node name="Milk2" parent="." instance=ExtResource("2_kkakq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.63558, 0, -1.56214)
+
 [node name="Milk" parent="." instance=ExtResource("2_kkakq")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.817791, 0, 0)
 
