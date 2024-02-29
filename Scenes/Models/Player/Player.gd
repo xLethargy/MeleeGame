@@ -24,10 +24,11 @@ var last_directions : Array = [direction]
 
 var collider = null
 
-
 var ability_one = false
 var distance_math_sum
 var adjusted_scale
+var can_use_ability_one = true
+var missed_ability_one = false
 
 var left = false
 
@@ -118,13 +119,13 @@ func _on_slow_timer_timeout():
 
 func _ability_one(delta):
 	if $Frog/Pivot.scale.z > 0.01 and retract:
-		$Frog/Pivot.scale.z -= 5 * delta
+		$Frog/Pivot.scale.z -= 2.5 * delta
 		ability_one = false
 	else:
 		retract = false
 	
 	
-	if ability_one == false and retract == false:
+	if ability_one == false and retract == false and can_use_ability_one:
 		if Input.is_action_just_pressed("ability_one"):
 			if %RayCast3D.get_collider() != null:
 				
@@ -133,14 +134,30 @@ func _ability_one(delta):
 				if collider.is_in_group("Enemy"):
 					if self.global_position.distance_to(collider.global_position) > 1 and collider.current_health > 0:
 						ability_one = true
+						can_use_ability_one = false
 						$Frog/Pivot.scale.z = 0
 						$Frog/Pivot.visible = true
 						no_movement = true
+						
+						$AbilityOneCooldown.start()
+			else:
+				$Frog/Pivot.rotation = Vector3(0, 0, 0)
+				missed_ability_one = true
+				can_use_ability_one = false
+				$Frog/Pivot.scale.z = 0
+				$Frog/Pivot.visible = true
+				no_movement = true
+				
+				$MissedAbilityOneCooldown.start()
 	
 	
 	if ability_one:
+		if collider == null:
+			return
+		
 		distance_math_sum = self.global_position.distance_to(collider.global_position)
 		adjusted_scale = distance_math_sum / original_laser_scale_z
+		
 		if $Frog/Pivot.scale.z < adjusted_scale - 0.05:
 			$Frog/Pivot.scale.z += 2.5 * delta
 			
@@ -148,8 +165,17 @@ func _ability_one(delta):
 		else:
 			if collider.is_in_group("Enemy"):
 				collider.take_damage(30)
+				no_movement = false
 			retract = true
+		
+	elif missed_ability_one:
+		if $Frog/Pivot.scale.z < 0.5:
+			$Frog/Pivot.scale.z += 2.5 * delta
+		else:
 			no_movement = false
+			retract = true
+			missed_ability_one = false
+			print ("retract")
 
 
 func _on_vision_timer_timeout():
@@ -173,3 +199,11 @@ func _on_vision_timer_timeout():
 	else:
 		closest_enemy = null
 	
+
+
+func _on_ability_one_cooldown_timeout():
+	can_use_ability_one = true
+
+
+func _on_missed_ability_one_cooldown_timeout():
+	can_use_ability_one = true
