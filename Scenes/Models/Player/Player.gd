@@ -31,7 +31,7 @@ var adjusted_scale
 
 var left = false
 
-var closest_enemy
+var retract = false
 
 func _ready():
 	Global.player = self
@@ -114,35 +114,45 @@ func _on_slow_timer_timeout():
 	
 	if jump_pressed == false:
 		slowed = false
-		#current_speed = normal_speed
 
 
 func _ability_one(delta):
-	
-	if ability_one == false:
-		if $Frog/Pivot.scale.z > 0.01:
-			$Frog/Pivot.scale.z -= 5 * delta
+	if $Frog/Pivot.scale.z > 0.01 and retract:
+		$Frog/Pivot.scale.z -= 5 * delta
+		ability_one = false
+	else:
+		retract = false
 		
+	
+	if ability_one == false and retract == false:
 		if Input.is_action_just_pressed("ability_one"):
 			if %RayCast3D.get_collider() != null:
 				
 				collider = %RayCast3D.get_collider()
 				
-				
-				ability_one = true
-				$Frog/Pivot.scale.z = 0
-				$Frog/Pivot.visible = true
-				no_movement = true
+				if self.global_position.distance_to(collider.global_position) > 1:
+					ability_one = true
+					$Frog/Pivot.scale.z = 0
+					$Frog/Pivot.visible = true
+					no_movement = true
 	
 	if ability_one:
+		$Frog/Pivot/Hitbox/CollisionShape3D.disabled = false
 		distance_math_sum = self.global_position.distance_to(collider.global_position)
 		adjusted_scale = distance_math_sum / original_laser_scale_z
 		if $Frog/Pivot.scale.z < adjusted_scale - 0.05:
 			$Frog/Pivot.scale.z += 2.5 * delta
+			
 			$Frog/Pivot.look_at(Vector3(collider.global_position.x, 1, collider.global_position.z), Vector3.UP)
 		else:
-			ability_one = false
+			retract = true
 			no_movement = false
+	else:
+		$SwitchOffTongueCollisionTimer.stop()
+		$SwitchOffTongueCollisionTimer.start()
+		await $SwitchOffTongueCollisionTimer.timeout
+		$Frog/Pivot/Hitbox/CollisionShape3D.disabled = true
+		
 		
 
 
@@ -152,6 +162,7 @@ func _on_vision_timer_timeout():
 	var closest_enemy = null
 	var closest_distance = INF # Use GDScript's infinity constant as the initial closest distance
 	
+	print (overlaps)
 	if overlaps.size() > 0:
 		for overlap in overlaps:
 			if overlap.is_in_group("Enemy"):
@@ -160,7 +171,6 @@ func _on_vision_timer_timeout():
 				if closest_enemy == null or distance < closest_distance:
 					closest_enemy = overlap
 					closest_distance = distance
-					print (overlap.name)
 				
 				if closest_enemy != null:
 					%RayCast3D.look_at(Vector3(closest_enemy.global_position.x, 1, closest_enemy.global_position.z), Vector3.UP)

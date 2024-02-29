@@ -226,7 +226,6 @@ script = ExtResource("1_ch30h")
 [node name="Frog" type="Node3D" parent="."]
 
 [node name="VisionArea" type="Area3D" parent="Frog"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.0551645)
 collision_layer = 0
 collision_mask = 8
 
@@ -240,16 +239,14 @@ shape = SubResource("ConvexPolygonShape3D_2y5tr")
 
 [node name="RayCast3D" type="RayCast3D" parent="Frog"]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.14472, -0.293806)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.14472, 0.150367)
 target_position = Vector3(0, 0, -5)
 collision_mask = 8
 
 [node name="Pivot" type="Node3D" parent="Frog"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.001, 0, 1.14472, -0.278533)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.001, 0, 1.14472, -0.27672)
 
 [node name="Hitbox" type="Area3D" parent="Frog/Pivot"]
-collision_layer = 2
-collision_mask = 0
 script = ExtResource("3_4ykfx")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Frog/Pivot/Hitbox"]
@@ -320,10 +317,6 @@ libraries = {
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.558628, 0)
 stream = ExtResource("4_q8g5x")
 pitch_scale = 1.25
-
-[node name="SwitchOffTongueCollisionTimer" type="Timer" parent="."]
-wait_time = 0.1
-one_shot = true
 
 [connection signal="timeout" from="NoMovementTimer" to="." method="_on_no_movement_timer_timeout"]
 [connection signal="timeout" from="TimeUntilInAir" to="." method="_on_time_until_in_air_timeout"]
