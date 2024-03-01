@@ -1,102 +1,134 @@
 extends CharacterBody3D
 
 @onready var level_node = get_tree().current_scene
-@onready var original_laser_scale_z = 5
 @onready var audio_player = $AudioStreamPlayer3D
+@onready var frog_pivot = $Frog/Pivot
 
-var normal_speed = 4
-var sprint_speed = 6
-var slow_speed = 2
+#TIMERS
+
+@onready var time_until_in_air_timer = $TimeUntilInAir
+@onready var no_movement_timer = $NoMovementTimer
+@onready var slow_timer = $SlowTimer
+@onready var ability_one_cooldown = $AbilityOneCooldown
+#@onready var missed_ability_one_cooldown = $MissedAbilityOneCooldown
+
+#MOVEMENT
+
+const NORMAL_SPEED = 4
+const SPRINT_SPEED = 6
+const SLOW_SPEED = 2
+var current_speed = NORMAL_SPEED
 var slowed = false
-var current_speed = normal_speed
 
-@export var jump_impulse = 10
-@export var fall_accelaration = 40
+var jump_impulse = 10
+var fall_accelaration = 40
+
+var is_in_air = false
 
 var no_movement = false
 
-var look_at_to = Vector3.ZERO
-var is_in_air = false
-
 var angular_accelaration = 7
+
 var direction = Vector3.ZERO
 var last_directions : Array = [direction]
 
-var collider = null
+#ABILITY ONE
 
 var ability_one = false
+var can_use_ability_one = true
+#var missed_ability_one = false
+
+var collider = null
 var distance_math_sum
 var adjusted_scale
-var can_use_ability_one = true
-var missed_ability_one = false
 
-var left = false
-
+var original_tongue_scale_z = 5
 var retract = false
+
 
 func _ready():
 	Global.player = self
 
+
 func _process(delta):
 	_ability_one(delta)
-	
 	_player_movement(delta)
 
 
 func _player_movement(delta):
+	_update_current_speed()
+	_capture_movement_input()
+	_capture_jump_input()
+	_update_velocity(delta)
+	_capture_attack_input()
+	_apply_movement()
+	_update_player_rotation(delta)
+
+
+func _update_current_speed():
 	if Input.is_action_pressed("sprint") and is_on_floor() and !slowed:
-		current_speed = sprint_speed
+		current_speed = SPRINT_SPEED
 	elif is_on_floor() and !slowed:
-		current_speed = normal_speed
+		current_speed = NORMAL_SPEED
+
+
+func _capture_movement_input():
+	var move_input_vector = Vector3(
+		Input.get_action_strength("move_right") - Input.get_action_strength("move_left"), 
+		0, 
+		Input.get_action_strength("move_back") - Input.get_action_strength("move_forward")
+		).normalized()
 	
-	if Input.is_action_pressed("move_forward") || Input.is_action_pressed("move_back") || Input.is_action_pressed("move_left") || Input.is_action_pressed("move_right"):
-		direction = Vector3(Input.get_action_strength("move_right") - Input.get_action_strength("move_left"), 0, Input.get_action_strength("move_back") - Input.get_action_strength("move_forward")).normalized()
+	if move_input_vector.length() > 0:
+		direction = move_input_vector
 		
-		if !is_on_floor() and (current_speed == 0 or slowed):
-			current_speed = slow_speed
-		
-		if last_directions.size() < 15:
-			last_directions.insert(0, direction)
-		else:
+		last_directions.insert(0, direction)
+		if last_directions.size() > 15:
 			last_directions.pop_back()
-			last_directions.insert(0, direction)
 	else:
-		current_speed = 0
-		
-		
+		direction = Vector3.ZERO
+
+
+func _capture_jump_input():
+	if is_on_floor() and Input.is_action_just_pressed("jump") and !slowed:
+		jump_impulse = 10
+		velocity.y = jump_impulse
+		time_until_in_air_timer.stop()
+		time_until_in_air_timer.start()
+		_play_fart_noise()
+
+
+func _play_fart_noise():
+	if randi() % 100 == 0:
+		audio_player.pitch_scale = randf_range(0.5, 1.25)
+		audio_player.play()
+
+
+func _update_velocity(delta):
 	velocity.x = direction.x * current_speed
 	velocity.z = direction.z * current_speed
-	
-	if is_on_floor() and Input.is_action_just_pressed("jump"):
-		if current_speed == normal_speed or current_speed == sprint_speed:
-			jump_impulse = 10
-		else:
-			jump_impulse = 7
-		velocity.y = jump_impulse
-		$TimeUntilInAir.stop()
-		$TimeUntilInAir.start()
-		
-		var fart_random = randi_range(0, 100)
-		if fart_random == 100:
-			audio_player.pitch_scale = randf_range(0.5, 1.25)
-			audio_player.play()
-		
 	velocity.y -= fall_accelaration * delta
-	
+
+
+func _capture_attack_input():
 	if Input.is_action_just_pressed("attack") and is_on_floor():
 		no_movement = true
-		$NoMovementTimer.stop()
-		$NoMovementTimer.start()
-	
+		no_movement_timer.stop()
+		no_movement_timer.start()
+
+
+func _apply_movement():
 	if is_on_floor() and is_in_air == true:
 		is_in_air = false
 		slowed = true
-		current_speed = slow_speed
-		$SlowTimer.stop()
-		$SlowTimer.start()
-	elif !no_movement or !is_on_floor() or current_speed == sprint_speed:
+		current_speed = SLOW_SPEED
+		slow_timer.stop()
+		slow_timer.start()
+	elif !no_movement or !is_on_floor() or current_speed == SPRINT_SPEED:
 		move_and_slide()
-	
+
+
+func _update_player_rotation(delta):
 	global_rotation.x = 0
 	self.rotation.y = lerp_angle(self.rotation.y, atan2(-last_directions[-1].x, -last_directions[-1].z), delta * angular_accelaration)
 
@@ -109,17 +141,14 @@ func _on_time_until_in_air_timeout():
 
 
 func _on_slow_timer_timeout():
-	var jump_pressed = false
-	if Input.is_action_pressed("jump"):
-		jump_pressed = true
-	
-	if jump_pressed == false:
-		slowed = false
+	slowed = false
 
 
 func _ability_one(delta):
-	if $Frog/Pivot.scale.z > 0.01 and retract:
-		$Frog/Pivot.scale.z -= 2.5 * delta
+	_vision_area_scanner()
+	
+	if frog_pivot.scale.z > 0.01 and retract:
+		frog_pivot.scale.z -= 2.5 * delta
 		ability_one = false
 	else:
 		retract = false
@@ -135,60 +164,59 @@ func _ability_one(delta):
 					if self.global_position.distance_to(collider.global_position) > 1 and collider.current_health > 0:
 						ability_one = true
 						can_use_ability_one = false
-						$Frog/Pivot.scale.z = 0
-						$Frog/Pivot.visible = true
+						frog_pivot.scale.z = 0
+						frog_pivot.visible = true
 						no_movement = true
 						
-						$AbilityOneCooldown.start()
-			else:
-				$Frog/Pivot.rotation = Vector3(0, 0, 0)
-				missed_ability_one = true
-				can_use_ability_one = false
-				$Frog/Pivot.scale.z = 0
-				$Frog/Pivot.visible = true
-				no_movement = true
-				
-				$MissedAbilityOneCooldown.start()
-	
-	
-	if ability_one:
-		if collider == null:
-			return
-		
-		distance_math_sum = self.global_position.distance_to(collider.global_position)
-		adjusted_scale = distance_math_sum / original_laser_scale_z
-		
-		if $Frog/Pivot.scale.z < adjusted_scale - 0.05:
-			$Frog/Pivot.scale.z += 2.5 * delta
+						ability_one_cooldown.start()
 			
-			$Frog/Pivot.look_at(Vector3(collider.global_position.x, 1, collider.global_position.z), Vector3.UP)
+			# MISSED ABILITY FEATURE
+			#else:
+				#frog_pivot.rotation = Vector3(0, 0, 0)
+				#missed_ability_one = true
+				#can_use_ability_one = false
+				#frog_pivot.scale.z = 0
+				#frog_pivot.visible = true
+				#no_movement = true
+				
+				#$MissedAbilityOneCooldown.start()
+	
+	if ability_one and collider != null:
+		distance_math_sum = self.global_position.distance_to(collider.global_position)
+		adjusted_scale = distance_math_sum / original_tongue_scale_z
+		
+		if frog_pivot.scale.z < adjusted_scale - 0.05:
+			frog_pivot.scale.z += 2.5 * delta
+			
+			frog_pivot.look_at(Vector3(collider.global_position.x, 1, collider.global_position.z), Vector3.UP)
 		else:
 			if collider.is_in_group("Enemy"):
 				collider.take_damage(30)
 				no_movement = false
 			retract = true
 		
-	elif missed_ability_one:
-		if $Frog/Pivot.scale.z < 0.5:
-			$Frog/Pivot.scale.z += 2.5 * delta
-		else:
-			no_movement = false
-			retract = true
-			missed_ability_one = false
-			print ("retract")
+	#MISSED ABILITY FEATURE
+	#elif missed_ability_one:
+		#if frog_pivot.scale.z < 0.5:
+			#frog_pivot.scale.z += 2.5 * delta
+		#else:
+			#no_movement = false
+			#retract = true
+			#missed_ability_one = false
 
 
-func _on_vision_timer_timeout():
+func _vision_area_scanner():
 	var overlaps = $Frog/VisionArea.get_overlapping_bodies()
 	var closest_enemy = null
-	var closest_distance = INF # Use GDScript's infinity constant as the initial closest distance
+	var closest_distance = INF
+	
 	
 	if overlaps.size() > 0:
 		for overlap in overlaps:
 			if overlap.is_in_group("Enemy"):
 				var distance = self.global_position.distance_to(overlap.global_position)
 				
-				if (closest_enemy == null or distance < closest_distance) and overlap.current_health > 0:
+				if (closest_enemy == null or distance < closest_distance):
 					closest_enemy = overlap
 					closest_distance = distance
 				else:
@@ -196,9 +224,6 @@ func _on_vision_timer_timeout():
 				
 				if closest_enemy != null:
 					%RayCast3D.look_at(Vector3(closest_enemy.global_position.x, 1, closest_enemy.global_position.z), Vector3.UP)
-	else:
-		closest_enemy = null
-	
 
 
 func _on_ability_one_cooldown_timeout():
