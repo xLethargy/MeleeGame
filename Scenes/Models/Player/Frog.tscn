@@ -300,10 +300,6 @@ one_shot = true
 wait_time = 3.0
 one_shot = true
 
-[node name="MissedAbilityOneCooldown" type="Timer" parent="."]
-wait_time = 0.5
-one_shot = true
-
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {
 "": SubResource("AnimationLibrary_1dlgg")
@@ -321,5 +317,4 @@ wait_time = 3.0
 [connection signal="timeout" from="TimeUntilInAir" to="." method="_on_time_until_in_air_timeout"]
 [connection signal="timeout" from="SlowTimer" to="." method="_on_slow_timer_timeout"]
 [connection signal="timeout" from="AbilityOneCooldown" to="." method="_on_ability_one_cooldown_timeout"]
-[connection signal="timeout" from="MissedAbilityOneCooldown" to="." method="_on_missed_ability_one_cooldown_timeout"]
 [connection signal="timeout" from="AbilityTwoCooldown" to="." method="_on_ability_two_cooldown_timeout"]

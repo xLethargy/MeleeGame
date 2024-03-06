@@ -10,7 +10,6 @@ extends CharacterBody3D
 @onready var no_movement_timer = $NoMovementTimer
 @onready var slow_timer = $SlowTimer
 @onready var ability_one_cooldown = $AbilityOneCooldown
-#@onready var missed_ability_one_cooldown = $MissedAbilityOneCooldown
 @onready var ability_two_cooldown = $AbilityTwoCooldown
 
 #MOVEMENT
@@ -36,9 +35,8 @@ var last_directions : Array = [direction]
 
 #ABILITY ONE
 
-var ability_one = false
+var ability_one_activated = false
 var can_use_ability_one = true
-#var missed_ability_one = false
 
 var collider = null
 var distance_math_sum
@@ -60,16 +58,27 @@ func _ready():
 
 func _process(delta):
 	_player_movement(delta)
-	_ability_one(delta)
-	_ability_two()
+	
+	_ability_one_tongue(delta)
+	_vision_area_scanner()
 
+func _input(event):
+	if is_on_floor() and event.is_action_pressed("jump") and !slowed:
+		_capture_jump_input()
+	
+	if is_on_floor() and event.is_action_pressed("ability_two") and can_use_ability_two:
+		_ability_two()
+	
+	if ability_one_activated == false and retract == false and can_use_ability_one and event.is_action_pressed("ability_one"):
+		_ability_one()
+	
+	if event.is_action_pressed("attack") and is_on_floor():
+		_capture_attack_input()
 
 func _player_movement(delta):
 	_update_current_speed()
 	_capture_movement_input()
-	_capture_jump_input()
 	_update_velocity(delta)
-	_capture_attack_input()
 	_apply_movement()
 	_update_player_rotation(delta)
 
@@ -99,12 +108,11 @@ func _capture_movement_input():
 
 
 func _capture_jump_input():
-	if is_on_floor() and Input.is_action_just_pressed("jump") and !slowed:
-		jump_impulse = 10
-		velocity.y = jump_impulse
-		time_until_in_air_timer.stop()
-		time_until_in_air_timer.start()
-		_play_fart_noise()
+	jump_impulse = 10
+	velocity.y = jump_impulse
+	time_until_in_air_timer.stop()
+	time_until_in_air_timer.start()
+	_play_fart_noise()
 
 
 func _play_fart_noise():
@@ -123,10 +131,9 @@ func _update_velocity(delta):
 
 
 func _capture_attack_input():
-	if Input.is_action_just_pressed("attack") and is_on_floor():
-		no_movement = true
-		no_movement_timer.stop()
-		no_movement_timer.start()
+	no_movement = true
+	no_movement_timer.stop()
+	no_movement_timer.start()
 
 
 func _apply_movement():
@@ -137,7 +144,6 @@ func _apply_movement():
 		slow_timer.stop()
 		slow_timer.start()
 	elif !no_movement or !is_on_floor() or current_speed == SPRINT_SPEED:
-		
 		move_and_slide()
 
 
@@ -157,44 +163,29 @@ func _on_slow_timer_timeout():
 	slowed = false
 
 
-func _ability_one(delta):
-	_vision_area_scanner()
+func _ability_one():
+	if %RayCast3D.get_collider() != null:
+		collider = %RayCast3D.get_collider()
+		if collider.is_in_group("Enemy"):
+			if self.global_position.distance_to(collider.global_position) > 1 and collider.current_health > 0:
+				ability_one_activated = true
+				can_use_ability_one = false
+				frog_pivot.scale.z = 0
+				frog_pivot.visible = true
+				no_movement = true
+				
+				ability_one_cooldown.start()
 	
+	
+
+func _ability_one_tongue(delta):
 	if frog_pivot.scale.z > 0.01 and retract:
 		frog_pivot.scale.z -= 2.5 * delta
-		ability_one = false
+		ability_one_activated = false
 	else:
 		retract = false
 	
-	
-	if ability_one == false and retract == false and can_use_ability_one:
-		if Input.is_action_just_pressed("ability_one"):
-			if %RayCast3D.get_collider() != null:
-				
-				collider = %RayCast3D.get_collider()
-				
-				if collider.is_in_group("Enemy"):
-					if self.global_position.distance_to(collider.global_position) > 1 and collider.current_health > 0:
-						ability_one = true
-						can_use_ability_one = false
-						frog_pivot.scale.z = 0
-						frog_pivot.visible = true
-						no_movement = true
-						
-						ability_one_cooldown.start()
-			
-			# MISSED ABILITY FEATURE
-			#else:
-				#frog_pivot.rotation = Vector3(0, 0, 0)
-				#missed_ability_one = true
-				#can_use_ability_one = false
-				#frog_pivot.scale.z = 0
-				#frog_pivot.visible = true
-				#no_movement = true
-				
-				#$MissedAbilityOneCooldown.start()
-	
-	if ability_one and collider != null:
+	if ability_one_activated and collider != null:
 		distance_math_sum = self.global_position.distance_to(collider.global_position)
 		adjusted_scale = distance_math_sum / original_tongue_scale_z
 		
@@ -207,16 +198,6 @@ func _ability_one(delta):
 				collider.take_damage(30)
 				no_movement = false
 			retract = true
-		
-	#MISSED ABILITY FEATURE
-	#elif missed_ability_one:
-		#if frog_pivot.scale.z < 0.5:
-			#frog_pivot.scale.z += 2.5 * delta
-		#else:
-			#no_movement = false
-			#retract = true
-			#missed_ability_one = false
-
 
 func _vision_area_scanner():
 	var overlaps = $Frog/VisionArea.get_overlapping_bodies()
@@ -243,29 +224,23 @@ func _on_ability_one_cooldown_timeout():
 	can_use_ability_one = true
 
 
-func _on_missed_ability_one_cooldown_timeout():
-	can_use_ability_one = true
-
-
 func _ability_two():
-	print (ability_two_charges)
-	if is_on_floor() and Input.is_action_just_pressed("ability_two") and can_use_ability_two:
-		ability_two_charges -= 1
-		if ability_two_charges == 0:
-			can_use_ability_two = false
-		
-		var forward_direction = -last_directions[-1]
-		var upward_force = Vector3(0, ability_two_jump_impulse, 0)
-		var forward_force = -forward_direction * jump_impulse
-		
-		velocity += upward_force + forward_force
-		
-		ability_two_jump = true 
-		
-		time_until_in_air_timer.stop()
-		time_until_in_air_timer.start()
-		
-		ability_two_cooldown.start()
+	ability_two_charges -= 1
+	if ability_two_charges == 0:
+		can_use_ability_two = false
+	
+	var forward_direction = -last_directions[-1]
+	var upward_force = Vector3(0, ability_two_jump_impulse, 0)
+	var forward_force = -forward_direction * jump_impulse
+	
+	velocity += upward_force + forward_force
+	
+	ability_two_jump = true 
+	
+	time_until_in_air_timer.stop()
+	time_until_in_air_timer.start()
+	
+	ability_two_cooldown.start()
 
 
 func _on_ability_two_cooldown_timeout():
