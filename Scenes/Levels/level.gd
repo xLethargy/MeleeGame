@@ -2,6 +2,7 @@ extends Node3D
 
 @onready var camera = %MainCamera
 
+
 var collider = null
 var last_looked_position = Vector3()
 
@@ -18,3 +19,7 @@ func screen_point_to_ray():
 		last_looked_position = ray_array["position"]
 		return ray_array["position"]
 	return Vector3()
+
+
+func _on_frog_ability_two_bomb(pos):
+	pass

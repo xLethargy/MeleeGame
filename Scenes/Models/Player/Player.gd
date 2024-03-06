@@ -11,6 +11,7 @@ extends CharacterBody3D
 @onready var slow_timer = $SlowTimer
 @onready var ability_one_cooldown = $AbilityOneCooldown
 #@onready var missed_ability_one_cooldown = $MissedAbilityOneCooldown
+@onready var ability_two_cooldown = $AbilityTwoCooldown
 
 #MOVEMENT
 
@@ -32,6 +33,7 @@ var angular_accelaration = 7
 var direction = Vector3.ZERO
 var last_directions : Array = [direction]
 
+
 #ABILITY ONE
 
 var ability_one = false
@@ -45,14 +47,21 @@ var adjusted_scale
 var original_tongue_scale_z = 5
 var retract = false
 
+#ABILITY TWO
+
+var ability_two_jump_impulse = jump_impulse * 1.25
+var ability_two_jump = false
+var can_use_ability_two = true
+var ability_two_charges = 2
 
 func _ready():
 	Global.player = self
 
 
 func _process(delta):
-	_ability_one(delta)
 	_player_movement(delta)
+	_ability_one(delta)
+	_ability_two()
 
 
 func _player_movement(delta):
@@ -105,9 +114,12 @@ func _play_fart_noise():
 
 
 func _update_velocity(delta):
-	velocity.x = direction.x * current_speed
-	velocity.z = direction.z * current_speed
 	velocity.y -= fall_accelaration * delta
+	if !ability_two_jump:
+		velocity.x = direction.x * current_speed
+		velocity.z = direction.z * current_speed
+	elif is_in_air and is_on_floor():
+		ability_two_jump = false
 
 
 func _capture_attack_input():
@@ -125,6 +137,7 @@ func _apply_movement():
 		slow_timer.stop()
 		slow_timer.start()
 	elif !no_movement or !is_on_floor() or current_speed == SPRINT_SPEED:
+		
 		move_and_slide()
 
 
@@ -232,3 +245,29 @@ func _on_ability_one_cooldown_timeout():
 
 func _on_missed_ability_one_cooldown_timeout():
 	can_use_ability_one = true
+
+
+func _ability_two():
+	print (ability_two_charges)
+	if is_on_floor() and Input.is_action_just_pressed("ability_two") and can_use_ability_two:
+		ability_two_charges -= 1
+		if ability_two_charges == 0:
+			can_use_ability_two = false
+		
+		var forward_direction = -last_directions[-1]
+		var upward_force = Vector3(0, ability_two_jump_impulse, 0)
+		var forward_force = -forward_direction * jump_impulse
+		
+		velocity += upward_force + forward_force
+		
+		ability_two_jump = true 
+		
+		time_until_in_air_timer.stop()
+		time_until_in_air_timer.start()
+		
+		ability_two_cooldown.start()
+
+
+func _on_ability_two_cooldown_timeout():
+	ability_two_charges += 1
+	can_use_ability_two = true

@@ -314,12 +314,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.558628, 0)
 stream = ExtResource("4_q8g5x")
 pitch_scale = 1.25
 
-[node name="AbilityTwoCooldown" type="Timer" parent="."]
-wait_time = 3.0
-
 [connection signal="timeout" from="NoMovementTimer" to="." method="_on_no_movement_timer_timeout"]
 [connection signal="timeout" from="TimeUntilInAir" to="." method="_on_time_until_in_air_timeout"]
 [connection signal="timeout" from="SlowTimer" to="." method="_on_slow_timer_timeout"]
 [connection signal="timeout" from="AbilityOneCooldown" to="." method="_on_ability_one_cooldown_timeout"]
 [connection signal="timeout" from="MissedAbilityOneCooldown" to="." method="_on_missed_ability_one_cooldown_timeout"]
-[connection signal="timeout" from="AbilityTwoCooldown" to="." method="_on_ability_two_cooldown_timeout"]
